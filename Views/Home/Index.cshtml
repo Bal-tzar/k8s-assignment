@@ -3,4 +3,108 @@
 }
 <h1>@ViewData["Title"]</h1>
 
-<p>Use this page to manage your tasks.</p>
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Add a task</h5>
+        <div class="input-group">
+          <input id="new-task" class="form-control" placeholder="What needs to be done?" />
+          <button id="add-btn" class="btn btn-primary">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Tasks</h5>
+        <ul id="todo-list" class="list-group"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+  const apiBase = '/api/TodoTasks';
+
+  async function loadTodos() {
+    const res = await fetch(apiBase);
+    if (!res.ok) return console.error('Failed to load todos', res.status);
+    const todos = await res.json();
+    const list = document.getElementById('todo-list');
+    list.innerHTML = '';
+    todos.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.dataset.id = t.id ?? t.Id;
+
+      const left = document.createElement('div');
+      left.className = 'form-check';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'form-check-input me-2';
+      cb.checked = t.isCompleted ?? t.IsCompleted;
+      cb.addEventListener('change', () => toggleComplete(li.dataset.id, cb.checked, t));
+      const span = document.createElement('span');
+      span.textContent = t.tasks ?? t.Tasks;
+      left.appendChild(cb);
+      left.appendChild(span);
+
+      const del = document.createElement('button');
+      del.className = 'btn btn-sm btn-outline-danger';
+      del.textContent = 'Delete';
+      del.addEventListener('click', () => deleteTodo(li.dataset.id));
+
+      li.appendChild(left);
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+  }
+
+  async function addTodo() {
+    const input = document.getElementById('new-task');
+    const text = input.value.trim();
+    if (!text) return;
+    const payload = { Tasks: text, IsCompleted: false };
+    const res = await fetch(apiBase, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) return alert('Failed to add');
+    input.value = '';
+    await loadTodos();
+  }
+
+  async function toggleComplete(id, completed, original) {
+    const payload = {
+      Id: id,
+      Tasks: original.tasks ?? original.Tasks,
+      IsCompleted: completed
+    };
+    const res = await fetch(`${apiBase}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) console.error('Failed to update', res.status);
+    else await loadTodos();
+  }
+
+  async function deleteTodo(id) {
+    if (!confirm('Delete this task?')) return;
+    const res = await fetch(`${apiBase}/${id}`, { method: 'DELETE' });
+    if (!res.ok) return alert('Failed to delete');
+    await loadTodos();
+  }
+
+  document.getElementById('add-btn').addEventListener('click', addTodo);
+  document.getElementById('new-task').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+  });
+
+  // initial load
+  loadTodos();
+</script>
+}

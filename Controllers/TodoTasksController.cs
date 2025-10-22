@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Mvc;
+using KubernetesAssignment.Models;
+using KubernetesAssignment.Services;
+
 namespace KubernetesAssignment.Controllers;
 
 [ApiController]
@@ -10,59 +14,44 @@ public class TodoTasksController : ControllerBase
         _tasksService = tasksService;
 
     [HttpGet]
-    public async Task<List<Tasks>> Get() =>
-        await _taskService.GetAsync();
+    public async Task<List<TodoItem>> Get() =>
+        await _tasksService.GetAsync();
 
     [HttpGet("{id:length(24)}")]
-    public async Task<ActionResult<Tasks>> Get(string id)
+    public async Task<ActionResult<TodoItem>> Get(string id)
     {
-        var tasks = await _tasksService.GetAsync(id);
+        var todo = await _tasksService.GetAsync(id);
 
-        if (tasks is null)
-        {
-            return NotFound();
-        }
+        if (todo is null) return NotFound();
 
-        return tasks;
+        return todo;
     }
 
     [HttpPost]
-    public async Task<IActionResult> Post(Tasks newTasks)
+    public async Task<IActionResult> Post(TodoItem newTodo)
     {
-        await _booksService.CreateAsync(newTasks);
-
-        return CreatedAtAction(nameof(Get), new { id = newTasks.Id }, newTasks);
+        await _tasksService.CreateAsync(newTodo);
+        return CreatedAtAction(nameof(Get), new { id = newTodo.Id }, newTodo);
     }
 
     [HttpPut("{id:length(24)}")]
-    public async Task<IActionResult> Update(string id, Tasks updatedTasks)
+    public async Task<IActionResult> Update(string id, TodoItem updatedTodo)
     {
-        var tasks = await _tasksService.GetAsync(id);
+        var todo = await _tasksService.GetAsync(id);
+        if (todo is null) return NotFound();
 
-        if (tasks is null)
-        {
-            return NotFound();
-        }
-
-        updatedTasks.Id = tasks.Id;
-
-        await _tasksService.UpdateAsync(id, updatedTasks);
-
+        updatedTodo.Id = todo.Id;
+        await _tasksService.UpdateAsync(id, updatedTodo);
         return NoContent();
     }
 
     [HttpDelete("{id:length(24)}")]
     public async Task<IActionResult> Delete(string id)
     {
-        var tasks = await _tasksService.GetAsync(id);
-
-        if (tasks is null)
-        {
-            return NotFound();
-        }
+        var todo = await _tasksService.GetAsync(id);
+        if (todo is null) return NotFound();
 
         await _tasksService.RemoveAsync(id);
-
         return NoContent();
     }
 }
