@@ -1,7 +1,16 @@
+using KubernetesAssignment.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<TodoListDBSettings>(
+builder.Configuration.GetSection("TodoListDatabase"));
+builder.Services.AddSingleton<TasksService>();
+builder.Services.AddControllers()
+    .AddJsonOptions(
+        options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+    
 
 var app = builder.Build();
 
