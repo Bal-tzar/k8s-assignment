@@ -15,10 +15,26 @@ builder.Services.AddControllers()
 // Add Swashbuckle
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-// enable swagger in Development (or remove the if to always enable)
+// Serve wwwroot static files (CSS/JS/lib)
+app.UseStaticFiles();
+app.UseCors(); // place before MapControllers()
+
+// Map attribute-routed API controllers
+app.MapControllers();
+
+// keep MVC route for views
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -35,13 +51,5 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthorization();
-
-// Map attribute-routed API controllers
-app.MapControllers();
-
-// keep MVC route for views
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

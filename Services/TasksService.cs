@@ -8,13 +8,20 @@ public class TasksService
 {
     private readonly IMongoCollection<TodoItem> _todoTasks;
 
-    public TasksService(IOptions<TodoListDBSettings> todoListDBSettings)
+    public TasksService(IOptions<TodoListDBSettings> settings)
     {
-        var mongoClient = new MongoClient(todoListDBSettings.Value.ConnectionString);
-
-        var mongoDatabase = mongoClient.GetDatabase(todoListDBSettings.Value.DatabaseName);
-
-        _todoTasks = mongoDatabase.GetCollection<TodoItem>(todoListDBSettings.Value.TaskNames);
+        try
+        {
+            var client = new MongoClient(settings.Value.ConnectionString);
+            var database = client.GetDatabase(settings.Value.DatabaseName);
+            _todoTasks = database.GetCollection<TodoItem>(settings.Value.TaskNames);
+            Console.WriteLine($"✓ Connected to MongoDB: {settings.Value.ConnectionString}");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"✗ MongoDB connection failed: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<List<TodoItem>> GetAsync() =>

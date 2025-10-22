@@ -21,9 +21,7 @@ public class TodoTasksController : ControllerBase
     public async Task<ActionResult<TodoItem>> Get(string id)
     {
         var todo = await _tasksService.GetAsync(id);
-
         if (todo is null) return NotFound();
-
         return todo;
     }
 
@@ -39,7 +37,6 @@ public class TodoTasksController : ControllerBase
     {
         var todo = await _tasksService.GetAsync(id);
         if (todo is null) return NotFound();
-
         updatedTodo.Id = todo.Id;
         await _tasksService.UpdateAsync(id, updatedTodo);
         return NoContent();
@@ -50,7 +47,6 @@ public class TodoTasksController : ControllerBase
     {
         var todo = await _tasksService.GetAsync(id);
         if (todo is null) return NotFound();
-
         await _tasksService.RemoveAsync(id);
         return NoContent();
     }
