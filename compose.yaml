@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5044:5000"
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_ENVIRONMENT=Development
+      - TodoListDatabase__ConnectionString=mongodb://mongo:27017
+      - TodoListDatabase__DatabaseName=TodoList
+      - TodoListDatabase__TaskNames=Tasks
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:

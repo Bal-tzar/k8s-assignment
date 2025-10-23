@@ -1,8 +1,133 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Todo List";
 }
+<h1>@ViewData["Title"]</h1>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Add a task</h5>
+        <div class="input-group">
+          <input id="new-task" class="form-control" placeholder="What needs to be done?" />
+          <button id="add-btn" class="btn btn-primary">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Tasks</h5>
+        <ul id="todo-list" class="list-group"></ul>
+      </div>
+    </div>
+  </div>
 </div>
+
+@section Scripts {
+<script>
+  // Use relative URL to avoid any protocol/origin issues
+  const apiBase = '/api/TodoTasks';
+
+  async function loadTodos() {
+    try {
+      const res = await fetch(apiBase);
+      if (!res.ok) return console.error('Failed to load todos', res.status);
+      
+      const todos = await res.json();
+      const list = document.getElementById('todo-list');
+      list.innerHTML = '';
+      
+      if (!todos || todos.length === 0) {
+        list.innerHTML = '<li class="list-group-item text-muted">No tasks yet</li>';
+        return;
+      }
+
+      todos.forEach(t => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.dataset.id = t.Id;
+
+        const left = document.createElement('div');
+        left.className = 'form-check';
+        
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'form-check-input me-2';
+        cb.checked = t.IsCompleted || false;
+        cb.addEventListener('change', () => toggleComplete(li.dataset.id, cb.checked, t));
+        
+        const span = document.createElement('span');
+        span.textContent = t.Tasks || '(no title)';
+        left.appendChild(cb);
+        left.appendChild(span);
+
+        const del = document.createElement('button');
+        del.className = 'btn btn-sm btn-outline-danger';
+        del.textContent = 'Delete';
+        del.addEventListener('click', () => deleteTodo(li.dataset.id));
+
+        li.appendChild(left);
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    } catch (err) {
+      console.error('loadTodos:', err);
+    }
+  }
+
+  async function addTodo() {
+    try {
+      const input = document.getElementById('new-task');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const res = await fetch(apiBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Tasks: text, IsCompleted: false })
+      });
+
+      if (!res.ok) {
+        console.error('Add failed:', res.status);
+        return;
+      }
+
+      input.value = '';
+      await loadTodos();
+    } catch (err) {
+      console.error('addTodo:', err);
+    }
+  }
+
+  async function toggleComplete(id, completed, original) {
+    try {
+      const res = await fetch(`${apiBase}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Id: id, Tasks: original.Tasks, IsCompleted: completed })
+      });
+      if (res.ok) await loadTodos();
+    } catch (err) {
+      console.error('toggleComplete:', err);
+    }
+  }
+
+  async function deleteTodo(id) {
+    try {
+      if (!confirm('Delete this task?')) return;
+      const res = await fetch(`${apiBase}/${id}`, { method: 'DELETE' });
+      if (res.ok) await loadTodos();
+    } catch (err) {
+      console.error('deleteTodo:', err);
+    }
+  }
+
+  document.getElementById('add-btn').addEventListener('click', addTodo);
+  document.getElementById('new-task').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+  });
+
+  loadTodos();
+</script>
+}
