@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: todoapp
-        image: baltzar1994/kubernetesassignment-app:latest
+        image: baltzar1994/kubernetesassignment-app:v2
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
