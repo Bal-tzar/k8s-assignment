@@ -25,7 +25,10 @@ spec:
         - name: ASPNETCORE_ENVIRONMENT
           value: "Production"
         - name: TodoListDatabase__ConnectionString
-          value: "mongodb://mongo:27017"
+          valueFrom:
+          secretKeyRef:
+          name: mongo-credentials
+          key: connectionString
         - name: TodoListDatabase__DatabaseName
           value: "TodoList"
         - name: TodoListDatabase__TaskNames
