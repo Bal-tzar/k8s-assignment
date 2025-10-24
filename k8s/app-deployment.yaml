@@ -26,9 +26,9 @@ spec:
           value: "Production"
         - name: TodoListDatabase__ConnectionString
           valueFrom:
-          secretKeyRef:
-          name: mongo-credentials
-          key: connectionString
+            secretKeyRef:
+              name: mongo-credentials
+              key: connectionString
         - name: TodoListDatabase__DatabaseName
           value: "TodoList"
         - name: TodoListDatabase__TaskNames
